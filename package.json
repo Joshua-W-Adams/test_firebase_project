@@ -4,6 +4,7 @@
   "description": "A template for creating modules in accordance with the es modules design pattern",
   "main": "index.js",
   "scripts": {
+    "postinstall": "cd functions && npm install",
     "test": "echo \"Info: no test specified\" && exit 0"
   },
   "repository": {
