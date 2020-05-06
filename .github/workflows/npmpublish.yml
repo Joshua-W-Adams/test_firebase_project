@@ -1,0 +1,70 @@
+# This workflow will run tests using node and then deploy repository to firebase when a commit is made to the master branch
+# refer to https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions for GitHub YAML syntax
+
+name: Build, Test and Deploy
+
+# only run on pushes to the master branch
+on:
+  push:
+    branches:
+      - master
+
+# list of jobs to run
+jobs:
+  # job id = build
+  build:
+    # name of job displayed on GitHub actions
+    name: Build
+    # the type of machine to run the job on
+    runs-on: ubuntu-latest
+    # sequence of tasks for job to run
+    steps:
+      # name to display on github actions
+      - name: Checkout Repo
+        # uses the actions/checkout github repository on the master branch
+        # this action checks-out your repository under $GITHUB_WORKSPACE, so your workflow can access it
+        uses: actions/checkout@master
+      - name: Install Dependencies
+        # install all node package dependancies
+        run: npm install
+      - name: Conduct Tests
+        run: npm test
+      ## npm run - this runs an arbitrary command from a package’s "scripts"
+      ## build-prod - this would be a task in the repository to build a web app distribution package
+      # - name: Build
+        # run: npm run build-prod
+      ## uses actions/upload-artifact github repo
+      ## this uploads artifacts from your workflow allowing you to share data between jobs and store 
+      ## data once a workflow is complete
+      # - name: Archive Production Artifact
+      #   uses: actions/upload-artifact@master
+      #   with:
+      #     name: dist
+      #     path: dist
+
+  deploy:
+    name: Deploy
+    # id of job that must complete successfully for this job to run as jobs run async by default
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@master
+      ## download web application artifact for deployment to firebase hosting
+      # - name: Download Artifact
+      #   uses: actions/download-artifact@master
+      #   with:
+      #     name: dist
+      - name: Deploy to Firebase
+        # ation for firebase-tools enables arbitrary actions with the firebase command-line client
+        uses: w9jds/firebase-action@master
+        # inputs to be passed to action used
+        with:
+          # call firebase and passes the "deploy" arguement
+          args: deploy
+        # sets environment variables for steps to use in the runner environment
+        env:
+          # sets the FIREBASE_TOKEN environment variable as the FIREBASE_TOKEN set in the github
+          # repo secrets area resulting in the following final command being run...
+          # firebase deploy --token "$FIREBASE_TOKEN"
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
